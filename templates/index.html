@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+</head>
+<body>
+{% if commit %}
+<div class="d-flex flex-row-reverse">
+    <p>Code commit {{ commit }} </p>
+</div>
+
+{% endif %}
+<div class="container">
+    <div class="d-flex justify-content-center flex-nowrap flex-column">
+        <div class="d-flex justify">
+            <form action="/" method="GET">
+                <div class="form-group">
+                    <input type="text" class="form-control" name="username" placeholder="Username">
+                    <small id="emailHelp" class="form-text text-muted">Do you want to know if you are cool?</small>
+                </div>
+                <button type="submit" class="btn btn-primary">Play</button>
+            </form>
+        </div>
+        {% if username %}
+        <div class="d-flex justify">
+            <h1> {{ username }} you are the best !</h1>
+        </div>
+
+        {% endif %}
+    </div>
+</div>
+
+</body>
+</html>

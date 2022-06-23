@@ -1,10 +1,5 @@
 name: Docker
 
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
-
 on:
   push:
     branches: [ "main" ]
@@ -15,6 +10,19 @@ env:
 
 jobs:
   build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build
+        run: echo "building!"
+
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Testing
+        run: echo "testing!"
+        
+  docker-build-push:
 
     runs-on: ubuntu-latest
     permissions:
@@ -42,9 +50,7 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-
-      # Extract metadata (tags, labels) for Docker
-      # https://github.com/docker/metadata-action
+          
       - name: Extract Docker metadata
         id: meta
         uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38

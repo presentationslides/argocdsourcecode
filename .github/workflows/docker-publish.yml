@@ -7,7 +7,9 @@ on:
 
 env:
   IMAGE_NAME: brudnyhenry/zartiswebinar
-
+  CLUSTER_NAME: aplaczek-sandbox
+  CLUSTER_RESOURCE_GROUP: FTS_SANDBOX_aplaczek
+  NAMESPACE: default
 
 permissions:
   contents: read
@@ -95,7 +97,6 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=sha
 
-
       - name: Build and push Docker image
         id: build-and-push
         uses: docker/build-push-action@ac9327eae2b366085ac7f6a2d02df8aa8ead720a
@@ -103,3 +104,21 @@ jobs:
           context: .
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
+
+  deploy-to-cluster:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@main
+    - uses: azure/aks-set-context@v1
+      with:
+        creds: '${{ secrets.AZURE_CREDENTIALS }}'
+        cluster-name: ${{ env.CLUSTER_NAME }}
+        resource-group: ${{ env.CLUSTER_RESOURCE_GROUP }}
+    - uses: azure/k8s-deploy@v1
+      with:
+        manifests: |
+          ${{ github.workspace }}/manifests/deployment.yaml
+          ${{ github.workspace }}/manifests/service.yaml
+        images: |
+         brudnyhenry/zartiswebinar:${{ github.sha }}
+        namespace: ${{ env.NAMESPACE }}

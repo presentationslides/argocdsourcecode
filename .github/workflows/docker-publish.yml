@@ -40,7 +40,7 @@ jobs:
         pytest
         
   docker-build-push:
-
+    needs: build
     runs-on: ubuntu-latest
     permissions:
       contents: read

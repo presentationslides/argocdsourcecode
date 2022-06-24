@@ -1,9 +1,9 @@
-name: Python 
+name: Python
 
 on:
   workflow_dispatch:
   push:
-    branches: [ 'main']
+    branches: ["main"]
 
 env:
   IMAGE_NAME: brudnyhenry/zartiswebinar
@@ -15,47 +15,45 @@ permissions:
   contents: read
 
 jobs:
-
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python 3.10
-      uses: actions/setup-python@v3
-      with:
-        python-version: "3.10"
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install flake8
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-    - name: Lint with flake8
-      run: |
-        # stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.10"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      - name: Lint with flake8
+        run: |
+          # stop the build if there are Python syntax errors or undefined names
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
   test:
     needs: build
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python 3.10
-      uses: actions/setup-python@v3
-      with:
-        python-version: "3.10"
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install pytest
-    - name: Test with pytest
-      run: |
-        pytest
-        
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.10"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest
+      - name: Test with pytest
+        run: |
+          pytest
+
   docker-build-push:
     needs: test
     runs-on: ubuntu-latest
@@ -70,7 +68,7 @@ jobs:
         if: github.event_name != 'pull_request'
         uses: sigstore/cosign-installer@7e0881f8fe90b25e305bbf0309761e9314607e25
         with:
-          cosign-release: 'v1.9.0'
+          cosign-release: "v1.9.0"
       - name: Setup Docker buildx
         uses: docker/setup-buildx-action@79abd3f86f79a9d68a23c75a09a9a85889262adf
       - name: Log into registry
@@ -102,19 +100,25 @@ jobs:
     needs: docker-build-push
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@main
-    - uses: azure/aks-set-context@v1
-      with:
-        creds: '${{ secrets.AZURE_CREDENTIALS }}'
-        cluster-name: ${{ env.CLUSTER_NAME }}
-        resource-group: ${{ env.CLUSTER_RESOURCE_GROUP }}
+      - uses: actions/checkout@main
+      - uses: azure/aks-set-context@v1
+        with:
+          creds: "${{ secrets.AZURE_CREDENTIALS }}"
+          cluster-name: ${{ env.CLUSTER_NAME }}
+          resource-group: ${{ env.CLUSTER_RESOURCE_GROUP }}
 
-    - uses: azure/k8s-bake@v2.2
-      with:
-        renderEngine: 'helm'
-        helmChart: './helm/cooler/'
-        overrides: |
+      - uses: azure/k8s-bake@v2.2
+        id: bake
+        with:
+          renderEngine: "helm"
+          helmChart: "./helm/cooler/"
+          overrides: |
             image.tag:brudnyhenry/zartiswebinar:${{ steps.meta.outputs.tags }}
             commit:${{ github.sha }}
-        helm-version: 'latest'
-        silent: 'false'
+          helm-version: "latest"
+          silent: "false"
+
+      - uses: Azure/k8s-deploy@v1.2
+        with:
+          action: deploy
+          manifests: ${{ steps.bake.outputs.manifestsBundle }}

@@ -108,11 +108,13 @@ jobs:
         creds: '${{ secrets.AZURE_CREDENTIALS }}'
         cluster-name: ${{ env.CLUSTER_NAME }}
         resource-group: ${{ env.CLUSTER_RESOURCE_GROUP }}
-    - uses: azure/k8s-deploy@v1
+
+    - uses: azure/k8s-bake@v2.2
       with:
-        manifests: |
-          ${{ github.workspace }}/manifests/guestbook-deploy.yaml
-          ${{ github.workspace }}/manifests/guestbook-service.yaml
-        images: |
-         brudnyhenry/zartiswebinar:${{ github.sha }}
-        namespace: ${{ env.NAMESPACE }}
+        renderEngine: 'helm'
+        helmChart: './helm/cooler/'
+        overrides: |
+            image.tag:brudnyhenry/zartiswebinar:${{ steps.meta.outputs.tags }}
+            commit:${{ github.sha }}
+        helm-version: 'latest'
+        silent: 'false'

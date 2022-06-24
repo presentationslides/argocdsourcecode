@@ -121,5 +121,6 @@ jobs:
 
       - uses: Azure/k8s-deploy@v1.2
         with:
+          namespace: "gitops-push"
           action: deploy
           manifests: ${{ steps.bake.outputs.manifestsBundle }}

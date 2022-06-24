@@ -106,7 +106,7 @@ jobs:
           CONTAINER_IMAGE_TAG="${{needs.release.outputs.sha}}"
           echo New container image tag: $CONTAINER_IMAGE_TAG
           echo Create temporary folder to clone the repo into...
-          TEMP_FOLDER="$(mktemp -d)" 
+          TEMP_FOLDER="$(mkdir -p /tmp/temp)" 
           echo Clone the repository...
           git clone -b main "https://github.com/presentationslides/argocdgitops.git" ${TEMP_FOLDER} 
           cd ${TEMP_FOLDER}
@@ -119,3 +119,15 @@ jobs:
           git add .  
           git commit -m "refactor - updated Helm chart values for dev environment with container image - $CONTAINER_IMAGE_TAG" 
           git push -u origin main
+          
+      - name: Pushes to GitOps repository
+        uses: cpina/github-action-push-to-another-repository@main
+        env:
+          SSH_DEPLOY_KEY: ${{ secrets.SSH_DEPLOY_KEY }}
+          API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
+        with:
+          source-directory: '/tmp/temp'
+          destination-github-username: 'brudnyhenry'
+          destination-repository-name: 'presentationslides/argocdgitops.git'
+          user-email: adam.placzek@gmail.com
+          target-branch: main

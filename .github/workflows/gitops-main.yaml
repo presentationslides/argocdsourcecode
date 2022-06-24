@@ -1,4 +1,4 @@
-name: Oldschool
+name: GitOps
 
 on:
   workflow_dispatch:

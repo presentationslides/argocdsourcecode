@@ -38,7 +38,7 @@ spec:
              value: {{ .Values.commit | default .Chart.AppVersion }}
           ports:
             - name: http
-              containerPort: 80
+              containerPort: 5000
               protocol: TCP
           livenessProbe:
             httpGet:

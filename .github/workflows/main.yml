@@ -99,12 +99,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@main
+      - name: Set outputs
+        id: vars
+        run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
       - uses: azure/aks-set-context@v1
         with:
           creds: "${{ secrets.AZURE_CREDENTIALS }}"
           cluster-name: ${{ env.CLUSTER_NAME }}
           resource-group: ${{ env.CLUSTER_RESOURCE_GROUP }}
-
       - uses: azure/k8s-bake@v2.2
         id: bake
         with:
@@ -112,7 +114,7 @@ jobs:
           renderEngine: "helm"
           helmChart: "./helm/cooler/"
           overrides: |
-            image.tag:${{ github.sha }}
+            image.tag:sha-${{ steps.vars.outputs.sha_short }}
             commit:${{ github.sha }}
           helm-version: "latest"
           silent: "false"

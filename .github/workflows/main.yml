@@ -55,6 +55,9 @@ jobs:
           pytest
 
   release:
+    outputs:
+      output1: ${{ steps.step1.outputs.test }}
+      output2: ${{ steps.step2.outputs.test }}
     needs: test
     runs-on: ubuntu-latest
     permissions:
@@ -108,7 +111,7 @@ jobs:
           renderEngine: "helm"
           helmChart: "./helm/cooler/"
           overrides: |
-            image.tag:brudnyhenry/zartiswebinar:${{ jobs.release.steps.meta.outputs.tags }}
+            image.tag:brudnyhenry/zartiswebinar:${{ github.sha }}
             commit:${{ github.sha }}
           helm-version: "latest"
           silent: "false"

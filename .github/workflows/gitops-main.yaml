@@ -1,0 +1,122 @@
+name: Python
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+
+env:
+  IMAGE_NAME: brudnyhenry/zartiswebinar
+  CLUSTER_NAME: aplaczek-sandbox
+  CLUSTER_RESOURCE_GROUP: FTS_SANDBOX_aplaczek
+  NAMESPACE: default
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.10"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      - name: Lint with flake8
+        run: |
+          # stop the build if there are Python syntax errors or undefined names
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.10"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest
+      - name: Test with pytest
+        run: |
+          pytest
+
+  release:
+    outputs:
+      sha: ${{ steps.vars.outputs.sha_short }}
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Setup Docker buildx
+        uses: docker/setup-buildx-action@79abd3f86f79a9d68a23c75a09a9a85889262adf
+      - name: Set outputs
+        id: vars
+        run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+      - uses: azure/aks-set-context@v1
+      - name: Log into registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@28218f9b04b4f3f62068d7b6ce6ca5b26e35336c
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
+        with:
+          images: ${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha
+      - name: Build and push Docker image
+        id: build-and-push
+        uses: docker/build-push-action@ac9327eae2b366085ac7f6a2d02df8aa8ead720a
+        with:
+          context: .
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+
+  update-gitops-repo:
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Update image tag in Helm git repo 
+        run: | 
+          CONTAINER_IMAGE_TAG="${{needs.release.outputs.sha}}"
+          echo New container image tag: $CONTAINER_IMAGE_TAG
+          echo Create temporary folder to clone the repo into...
+          TEMP_FOLDER="$(mktemp -d)" 
+          echo Clone the repository...
+          git clone -b main "https://github.com/presentationslides/argocdgitops.git" ${TEMP_FOLDER} 
+          cd ${TEMP_FOLDER}/argocdgitops
+          ls
+          echo Update Helm chart values-dev with new image tag
+          CONTAINER_IMAGE_TAG=$CONTAINER_IMAGE_TAG yq e -i '.image.tag = env(CONTAINER_IMAGE_TAG)' cooler/values.yaml
+          echo 'Container image tag updated in cooler/values.yaml' 
+          git config user.email "adam.placzek@gmail.com" 
+          git config user.name "AdamPlaczek" 
+          git add .  
+          git commit -m "refactor - updated Helm chart values for dev environment with container image - $CONTAINER_IMAGE_TAG" 
+          git push -u origin main

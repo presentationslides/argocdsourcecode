@@ -108,10 +108,11 @@ jobs:
       - uses: azure/k8s-bake@v2.2
         id: bake
         with:
+          namespace: "gitops-push"
           renderEngine: "helm"
           helmChart: "./helm/cooler/"
           overrides: |
-            image.tag:brudnyhenry/zartiswebinar:${{ github.sha }}
+            image.tag:${{ github.sha }}
             commit:${{ github.sha }}
           helm-version: "latest"
           silent: "false"

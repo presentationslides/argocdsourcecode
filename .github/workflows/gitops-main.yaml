@@ -125,4 +125,4 @@ jobs:
           directory: '/tmp/temp'
           github_token: ${{ secrets.GH_TOKEN }}
           branch: main
-          repository: https://github.com/presentationslides/argocdgitops.git
+          repository: presentationslides/argocdgitops.git

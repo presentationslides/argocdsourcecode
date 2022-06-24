@@ -118,16 +118,10 @@ jobs:
           git config user.name "AdamPlaczek" 
           git add .  
           git commit -m "refactor - updated Helm chart values for dev environment with container image - $CONTAINER_IMAGE_TAG" 
-          git push -u origin main
           
-      - name: Pushes to GitOps repository
-        uses: cpina/github-action-push-to-another-repository@main
-        env:
-          SSH_DEPLOY_KEY: ${{ secrets.SSH_DEPLOY_KEY }}
-          API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
+      - name: Push changes
+        uses: ad-m/github-push-action@master
         with:
-          source-directory: '/tmp/temp'
-          destination-github-username: 'brudnyhenry'
-          destination-repository-name: 'presentationslides/argocdgitops.git'
-          user-email: adam.placzek@gmail.com
-          target-branch: main
+          directory: '/tmp/temp'
+          github_token: ${{ secrets.GH_TOKEN }}
+          branch: main

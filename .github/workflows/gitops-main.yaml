@@ -106,10 +106,10 @@ jobs:
           CONTAINER_IMAGE_TAG="${{needs.release.outputs.sha}}"
           echo New container image tag: $CONTAINER_IMAGE_TAG
           echo Create temporary folder to clone the repo into...
-          TEMP_FOLDER="$(mkdir -p /tmp/temp)" 
+          mkdir -p /tmp/temp
           echo Clone the repository...
-          git clone -b main "https://github.com/presentationslides/argocdgitops.git" ${TEMP_FOLDER} 
-          cd ${TEMP_FOLDER}
+          git clone -b main "https://github.com/presentationslides/argocdgitops.git" /tmp/temp
+          cd /tmp/temp
           ls
           echo Update Helm chart values-dev with new image tag
           CONTAINER_IMAGE_TAG=$CONTAINER_IMAGE_TAG yq e -i '.image.tag = env(CONTAINER_IMAGE_TAG)' cooler/values.yaml

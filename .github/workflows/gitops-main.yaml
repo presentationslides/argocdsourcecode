@@ -112,7 +112,7 @@ jobs:
           cd /tmp/temp
           ls
           echo Update Helm chart values-dev with new image tag
-          CONTAINER_IMAGE_TAG=$CONTAINER_IMAGE_TAG yq e -i '.image.tag = "sha-${CONTAINER_IMAGE_TAG}"' cooler/values.yaml
+          CONTAINER_IMAGE_TAG=$CONTAINER_IMAGE_TAG yq e -i '.image.tag = \"sha-$CONTAINER_IMAGE_TAG\"' cooler/values.yaml
           echo 'Container image tag updated in cooler/values.yaml' 
           git config user.email "adam.placzek@gmail.com" 
           git config user.name "AdamPlaczek" 

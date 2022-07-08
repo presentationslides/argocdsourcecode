@@ -117,7 +117,7 @@ jobs:
           git config user.email "adam.placzek@gmail.com" 
           git config user.name "AdamPlaczek" 
           git add .  
-          git commit -m "refactor - updated Helm chart values for dev environment with container image - $CONTAINER_IMAGE_TAG" 
+          git diff-index --quiet HEAD || git commit -m "refactor - updated Helm chart values for dev environment with container image - $CONTAINER_IMAGE_TAG" 
           
       - name: Push changes
         uses: ad-m/github-push-action@master
